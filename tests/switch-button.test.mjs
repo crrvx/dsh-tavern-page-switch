@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fakePage, loadClientContext, makeDocument, makeReact, makeWindow } from "./helpers.mjs";
+import { loadClientContext, makeDocument, makeReact, makeWindow } from "./helpers.mjs";
 
 function childrenOf(tree) {
   const children = tree.props.children;
@@ -9,31 +9,31 @@ function childrenOf(tree) {
   return [children];
 }
 
-test("button renders nothing while no page is registered", async () => {
+test("button renders nothing until both pages are available", async () => {
   const win = makeWindow();
   const doc = makeDocument();
   const react = makeReact();
-  const context = await loadClientContext({ win, doc, react });
+  const context = await loadClientContext({ win, doc, react, button: true });
   const store = context.createTavernPageSwitchStore({ window: win, document: doc });
   const Button = context.createTavernPageSwitchButton(store);
   assert.equal(Button({ wide: true }), null);
+  store.setAvailable(true);
+  assert.notEqual(Button({ wide: true }), null);
 });
 
 test("wide button shows the target page and toggles both ways", async () => {
   const win = makeWindow();
   const doc = makeDocument();
   const react = makeReact();
-  const context = await loadClientContext({ win, doc, react });
+  const context = await loadClientContext({ win, doc, react, button: true });
   const store = context.createTavernPageSwitchStore({ window: win, document: doc });
-  const log = [];
-  store.registerPage(fakePage("tavern", log, "酒馆"));
+  store.setAvailable(true);
   const Button = context.createTavernPageSwitchButton(store);
 
   const tavernTree = Button({ wide: true });
   assert.equal(tavernTree.type, "button");
   assert.equal(tavernTree.props.className, "dsh-tavern-page-switch-button");
   assert.equal(tavernTree.props["data-dsh-tavern-page-switch"], "tavern");
-  assert.equal(tavernTree.props["data-dsh-tavern-page-switch-page"], "tavern");
   const tavernChildren = childrenOf(tavernTree);
   assert.equal(tavernChildren.length, 2);
   assert.equal(tavernChildren[0].props.children, "左栏页面");
@@ -56,10 +56,9 @@ test("narrow button collapses to the arrow glyph only", async () => {
   const win = makeWindow();
   const doc = makeDocument();
   const react = makeReact();
-  const context = await loadClientContext({ win, doc, react });
+  const context = await loadClientContext({ win, doc, react, button: true });
   const store = context.createTavernPageSwitchStore({ window: win, document: doc });
-  const log = [];
-  store.registerPage(fakePage("tavern", log));
+  store.setAvailable(true);
   const Button = context.createTavernPageSwitchButton(store);
   const tree = Button({ wide: false });
   const children = childrenOf(tree);
@@ -71,10 +70,9 @@ test("legacy React without useSyncExternalStore still rerenders after a switch",
   const win = makeWindow();
   const doc = makeDocument();
   const react = makeReact({ legacy: true });
-  const context = await loadClientContext({ win, doc, react });
+  const context = await loadClientContext({ win, doc, react, button: true });
   const store = context.createTavernPageSwitchStore({ window: win, document: doc });
-  const log = [];
-  store.registerPage(fakePage("tavern", log, "酒馆"));
+  store.setAvailable(true);
   const Button = context.createTavernPageSwitchButton(store);
   const first = Button({ wide: true });
   assert.equal(first.props["data-dsh-tavern-page-switch"], "tavern");

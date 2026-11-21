@@ -2,8 +2,9 @@ var TAVERN_PAGE_SWITCH_PLUGIN_ID = "dsh-tavern-page-switch";
 var tavernPageSwitchService = null;
 
 function applyTavernPageSwitch(ctx) {
+  var removeStyles = function () {};
   if (typeof document !== "undefined" && document) {
-    installTavernPageSwitchStyles(document);
+    removeStyles = installTavernPageSwitchStyles(document);
   }
   if (!tavernPageSwitchService) {
     tavernPageSwitchService = createTavernPageSwitchStore();
@@ -21,6 +22,7 @@ function applyTavernPageSwitch(ctx) {
     return;
   }
   var slots = ctx.slots;
+  var shadow = createTavernNativeShadow({ slots: slots, service: service });
   var SwitchButton = createTavernPageSwitchButton(service);
 
   function mountSwitch() {
@@ -40,9 +42,12 @@ function applyTavernPageSwitch(ctx) {
 
   if (typeof ctx.effect === "function") {
     ctx.effect(function () {
+      shadow.start();
       var release = mountSwitch();
       return function () {
         releaseSwitch(release);
+        shadow.dispose();
+        removeStyles();
         if (tavernPageSwitchService === service) {
           service.dispose();
           tavernPageSwitchService = null;
@@ -50,6 +55,7 @@ function applyTavernPageSwitch(ctx) {
       };
     }, "dsh-tavern-page-switch: footer switch");
   } else {
+    shadow.start();
     mountSwitch();
   }
 }

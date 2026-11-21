@@ -12,6 +12,16 @@ var TAVERN_PAGE_SWITCH_CSS = [
   '.dsh-tavern-page-switch-button-label { flex: none; }',
   '.dsh-tavern-page-switch-button-value { flex: none; color: var(--dsw-alias-label-primary); font-weight: 700; }',
   '.dsh-tavern-page-switch-button-value:only-child { font-size: 15px; font-weight: 600; }',
+  '',
+  '/* Native mode keeps Tavern\'s shell but must show the host chrome that stock Tavern hides. */',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar button[aria-label="新建会话"],',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar button[aria-label="New session"] { display: inline-flex !important; }',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar nav[aria-label="全局面板"],',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar nav[aria-label="Global panels"] { display: flex !important; }',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [data-slot="settings.launcher"] button[data-signed-out] > [class$="_label"] { display: inline !important; }',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [data-slot="settings.launcher"] button[data-signed-out][data-collapsed="false"]::after { content: none !important; }',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [class*="_logoRow"] > [class*="_brand"] { display: flex !important; }',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [class*="_topStrip"] + [class*="_logoRow"] { display: flex !important; }',
 ].join("\n");
 
 function installTavernPageSwitchStyles(doc) {

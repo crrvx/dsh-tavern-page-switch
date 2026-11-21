@@ -53,27 +53,96 @@ export function makeDocument() {
   };
 }
 
+export function makeSlots() {
+  const records = new Map();
+  const listeners = new Map();
+
+  function notify(key) {
+    const set = listeners.get(key);
+    if (!set) return;
+    for (const listener of Array.from(set)) listener();
+  }
+
+  function entries(key) {
+    return records.get(key) || [];
+  }
+
+  function sort(key) {
+    const list = records.get(key);
+    if (!list) return;
+    list.sort((a, b) => ((a.options.priority ?? 0) - (b.options.priority ?? 0)) || ((a.options.order ?? 0) - (b.options.order ?? 0)));
+  }
+
+  function add(key, options, component) {
+    const list = records.get(key) || [];
+    if (!records.has(key)) records.set(key, list);
+    if (options && options.priority !== undefined && list.some((entry) => (entry.options.priority ?? 0) === options.priority)) {
+      throw new Error('single slot "' + key + '" already has a registration at priority ' + options.priority);
+    }
+    const entry = {
+      component,
+      options: Object.assign({}, options || {}),
+      ...(options && options.store !== undefined ? { store: options.store } : {}),
+      ...(options && options.inject !== undefined ? { inject: options.inject } : {}),
+      ...(options && options.locale !== undefined ? { locale: options.locale } : {}),
+      ...(options && options.children ? { children: options.children } : {})
+    };
+    list.push(entry);
+    sort(key);
+    notify(key);
+    return entry;
+  }
+
+  function register(spec, component) {
+    const entry = add(spec.name, spec, component);
+    return function () {
+      const list = records.get(spec.name) || [];
+      const index = list.indexOf(entry);
+      if (index === -1) return;
+      list.splice(index, 1);
+      entry.children = undefined;
+      notify(spec.name);
+    };
+  }
+
+  function remove(key, entry) {
+    const list = records.get(key) || [];
+    const index = list.indexOf(entry);
+    if (index === -1) return false;
+    list.splice(index, 1);
+    notify(key);
+    return true;
+  }
+
+  return {
+    entries,
+    register,
+    seed(key, options, component) { return add(key, options, component); },
+    remove,
+    subscribe(key, listener) {
+      const set = listeners.get(key) || new Set();
+      if (!listeners.has(key)) listeners.set(key, set);
+      set.add(listener);
+      return function () { set.delete(listener); };
+    },
+    listenerCount(key) { return (listeners.get(key) || new Set()).size; }
+  };
+}
+
 export async function loadClientContext(options) {
   options = options || {};
   const win = options.win || makeWindow();
   const doc = options.doc || makeDocument();
   const context = vm.createContext({ window: win, document: doc, console });
   vm.runInContext(await readSource("core.js"), context);
-  if (options.react) {
-    context.React = options.react;
-    context.h = options.react.createElement;
-    vm.runInContext(await readSource("switch-button.js"), context);
+  if (options.react || options.shadow) {
+    const react = options.react || makeReact();
+    context.React = react;
+    context.h = react.createElement;
+    if (options.shadow) vm.runInContext(await readSource("shadow.js"), context);
+    if (options.button) vm.runInContext(await readSource("switch-button.js"), context);
   }
   return context;
-}
-
-export function fakePage(id, log, title) {
-  return {
-    id,
-    title: title || "酒馆",
-    attach(host) { log.push([id, "attach", Boolean(host && host.returning)]); },
-    detach() { log.push([id, "detach"]); }
-  };
 }
 
 export function makeReact(options) {
@@ -95,7 +164,30 @@ export function makeReact(options) {
     state
   };
   if (!options.legacy) {
-    react.useSyncExternalStore = function (subscribe, getSnapshot) { return getSnapshot(); };
+    react.useSyncExternalStore = function (_subscribe, getSnapshot) { return getSnapshot(); };
   }
   return react;
+}
+
+export function fakeHostWorkspace(component) {
+  return {
+    children: {
+      "sidebar.workspaces.directoryFlow": { kind: "single", scope: "root" },
+      "sidebar.workspaces.session.row.action": { kind: "list", scope: "root" },
+      "sidebar.session.row.leading": { kind: "list", scope: "root", inline: true },
+      "sidebar.session.row.trailing": { kind: "list", scope: "root", inline: true },
+      "sidebar.session.row.hover": { kind: "list", scope: "root" }
+    },
+    store: { create: function () { return { actions: {}, getSnapshot: function () { return {}; }, subscribe: function () { return function () {}; } }; } },
+    inject: function () { return { startSession: function () {}, hooks: {} }; },
+    locale: "workspace"
+  };
+}
+
+export function fakeTavernWorkspace(component) {
+  return {
+    children: {
+      "tavern.sidebar.chrome": { kind: "list", scope: "root" }
+    }
+  };
 }

@@ -5,9 +5,44 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
-import { makeDocument, makeReact, makeWindow } from "./helpers.mjs";
+import {
+  fakeHostWorkspace,
+  fakeTavernWorkspace,
+  makeDocument,
+  makeReact,
+  makeSlots,
+  makeWindow
+} from "./helpers.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
+function tick() {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
+function slotsWithInject() {
+  const base = makeSlots();
+  const slots = {
+    injected: [],
+    released: 0,
+    entries: base.entries,
+    register: base.register,
+    subscribe: base.subscribe,
+    seed: base.seed,
+    remove: base.remove,
+    inject(name, create) {
+      this.injected.push(name);
+      const release = create();
+      return {
+        dispose() {
+          slots.released += 1;
+          if (typeof release === "function") release();
+        }
+      };
+    }
+  };
+  return slots;
+}
 
 test("lib/client.js is up to date with src/client", () => {
   execFileSync(process.execPath, ["build.mjs", "--check"], { cwd: root, stdio: "pipe" });
@@ -31,17 +66,7 @@ test("client module registers with the module loader and provides tavernPageSwit
   assert.equal(exportsObj.inject.join(","), "slots");
   assert.equal(typeof exportsObj.apply, "function");
 
-  const slots = {
-    injected: [],
-    registeredSpec: null,
-    released: 0,
-    inject(name, create) {
-      this.injected.push(name);
-      create();
-      return { dispose() { slots.released += 1; } };
-    },
-    register(spec) { this.registeredSpec = spec; return { spec }; }
-  };
+  const slots = slotsWithInject();
   const ctx = {
     provided: null,
     cleanup: null,
@@ -53,19 +78,37 @@ test("client module registers with the module loader and provides tavernPageSwit
   exportsObj.apply(ctx);
   assert.equal(ctx.provided.name, "tavernPageSwitch");
   assert.equal(slots.injected.join(","), "sidebar.footer.action");
-  assert.equal(slots.registeredSpec.id, "dsh-tavern-page-switch");
-  assert.equal(slots.registeredSpec.order, 20);
   assert.equal(ctx.effectLabel, "dsh-tavern-page-switch: footer switch");
+  const switchEntries = slots.entries("sidebar.footer.action");
+  assert.equal(switchEntries.length, 1);
+  assert.equal(switchEntries[0].options.id, "dsh-tavern-page-switch");
+  assert.equal(switchEntries[0].options.order, 20);
 
+  // Unavailable pages keep the class off even in native mode.
   const service = ctx.provided.service;
   service.setMode("native");
-  assert.equal(doc.classes.has("dsh-tavern-native-sidebar"), true);
-  service.setMode("tavern");
   assert.equal(doc.classes.has("dsh-tavern-native-sidebar"), false);
+
+  slots.seed("sidebar.workspaces", { name: "sidebar.workspaces", priority: 0, ...fakeHostWorkspace() }, function HostWorkspace() { return null; });
+  slots.seed("sidebar.workspaces", { name: "sidebar.workspaces", priority: -1, ...fakeTavernWorkspace() }, function TavernWorkspace() { return null; });
+  slots.seed("sidebar.brand.mark", { name: "sidebar.brand.mark", priority: 0 }, function HostBrand() { return null; });
+  await tick();
+  assert.equal(service.isAvailable(), true);
+  assert.equal(doc.classes.has("dsh-tavern-native-sidebar"), true);
+  const proxies = slots.entries("sidebar.workspaces").filter((entry) => entry.options.id === "dsh-tavern-page-switch:native-workspaces");
+  assert.equal(proxies.length, 1);
+
+  service.setMode("tavern");
+  await tick();
+  assert.equal(doc.classes.has("dsh-tavern-native-sidebar"), false);
+  assert.equal(slots.entries("sidebar.workspaces").filter((entry) => entry.options.id === "dsh-tavern-page-switch:native-workspaces").length, 0);
 
   ctx.cleanup();
   assert.equal(slots.released, 1);
   assert.equal(win.listenerCount(), 0);
+  assert.equal(doc.head.children.length, 0);
+  assert.equal(slots.entries("sidebar.workspaces").length, 2);
+  assert.equal(slots.entries("sidebar.brand.mark").length, 1);
   service.setMode("native");
   assert.equal(service.getMode(), "tavern");
 });
@@ -91,6 +134,7 @@ test("package manifest and host entry expose the dsh bundle contract", async () 
   assert.equal(manifest.dsh.client.platform, "web");
   assert.equal(manifest.dsh.client.inject.join(","), "@deepseek-ai/dsh-client-modules,@deepseek-ai/dsh-client-ui-slots");
   assert.equal(manifest.exports["./client"], "./lib/client.js");
+  assert.match(manifest.version, /^0\.2\./);
   const host = await import("../lib/index.js");
   assert.equal(host.name, "dsh-tavern-page-switch");
   assert.equal(Array.isArray(host.inject), true);

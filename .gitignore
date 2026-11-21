@@ -1,4 +1,3 @@
 node_modules/
-.verify/
 *.log
-tavern-side/backups/
+.tmp-*

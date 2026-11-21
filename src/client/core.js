@@ -20,25 +20,31 @@ function createTavernPageSwitchStore(options) {
     warn("[dsh-tavern-page-switch] cannot read localStorage", error);
   }
 
-  var pages = [];
-  var activePage = null;
+  var available = false;
   var listeners = new Set();
   var disposed = false;
   var snapshot = null;
 
   function rebuildSnapshot() {
-    snapshot = Object.freeze({
-      mode: mode,
-      pages: Object.freeze(pages.slice()),
-      activePageId: activePage ? activePage.id : null
-    });
+    snapshot = Object.freeze({ mode: mode, available: available });
   }
 
   function readSnapshot() {
     return snapshot;
   }
 
+  function applyBodyClass() {
+    if (!doc || !doc.body || !doc.body.classList) return;
+    try {
+      if (mode === "native" && available) doc.body.classList.add(nativeClass);
+      else doc.body.classList.remove(nativeClass);
+    } catch (error) {
+      warn("[dsh-tavern-page-switch] cannot apply body class", error);
+    }
+  }
+
   function emit() {
+    applyBodyClass();
     listeners.forEach(function (listener) {
       try {
         listener(snapshot);
@@ -46,16 +52,6 @@ function createTavernPageSwitchStore(options) {
         warn("[dsh-tavern-page-switch] subscriber failed", error);
       }
     });
-  }
-
-  function applyBodyClass() {
-    if (!doc || !doc.body || !doc.body.classList) return;
-    try {
-      if (mode === "native") doc.body.classList.add(nativeClass);
-      else doc.body.classList.remove(nativeClass);
-    } catch (error) {
-      warn("[dsh-tavern-page-switch] cannot apply body class", error);
-    }
   }
 
   function persist() {
@@ -66,96 +62,35 @@ function createTavernPageSwitchStore(options) {
     }
   }
 
-  function callAttach(page, returning) {
-    if (!page || typeof page.attach !== "function") return;
-    try {
-      page.attach({ returning: Boolean(returning) });
-    } catch (error) {
-      warn("[dsh-tavern-page-switch] page " + page.id + " attach failed", error);
-    }
-  }
-
-  function callDetach(page) {
-    if (!page || typeof page.detach !== "function") return;
-    try {
-      page.detach();
-    } catch (error) {
-      warn("[dsh-tavern-page-switch] page " + page.id + " detach failed", error);
-    }
-  }
-
-  function changeMode(next, returning, persistMode) {
-    if (next === "native") {
-      if (activePage) callDetach(activePage);
-      mode = "native";
-      applyBodyClass();
-    } else {
-      mode = "tavern";
-      applyBodyClass();
-      if (activePage) callAttach(activePage, returning);
-    }
-    if (persistMode !== false) persist();
-    rebuildSnapshot();
-    emit();
-  }
-
   function setMode(next) {
     if (disposed) return mode;
     var normalized = normalizeTavernPageSwitchMode(next);
     if (normalized === mode) return mode;
-    changeMode(normalized, mode === "native" && normalized === "tavern", true);
+    mode = normalized;
+    persist();
+    rebuildSnapshot();
+    emit();
     return mode;
+  }
+
+  function setAvailable(next) {
+    if (disposed) return available;
+    var value = Boolean(next);
+    if (value === available) return available;
+    available = value;
+    rebuildSnapshot();
+    emit();
+    return available;
   }
 
   function syncFromStorage(value) {
     if (disposed) return mode;
     var normalized = normalizeTavernPageSwitchMode(value);
     if (normalized === mode) return mode;
-    changeMode(normalized, mode === "native" && normalized === "tavern", false);
+    mode = normalized;
+    rebuildSnapshot();
+    emit();
     return mode;
-  }
-
-  function findPageIndex(page) {
-    for (var index = 0; index < pages.length; index += 1) {
-      if (pages[index] === page) return index;
-    }
-    return -1;
-  }
-
-  function unregisterPage(page) {
-    if (disposed) return false;
-    var index = findPageIndex(page);
-    if (index === -1) return false;
-    var wasActive = activePage === page;
-    pages.splice(index, 1);
-    if (wasActive) {
-      callDetach(page);
-      activePage = pages.length ? pages[pages.length - 1] : null;
-      if (mode === "tavern" && activePage) callAttach(activePage, false);
-    }
-    rebuildSnapshot();
-    emit();
-    return true;
-  }
-
-  function registerPage(page) {
-    if (disposed) return function () {};
-    if (!page || typeof page.id !== "string" || page.id === "") {
-      throw new TypeError("tavernPageSwitch.registerPage: page.id must be a non-empty string");
-    }
-    if (typeof page.attach !== "function" || typeof page.detach !== "function") {
-      throw new TypeError("tavernPageSwitch.registerPage: page needs attach() and detach()");
-    }
-    if (findPageIndex(page) !== -1) {
-      return function () { return unregisterPage(page); };
-    }
-    if (activePage) callDetach(activePage);
-    activePage = page;
-    pages.push(page);
-    if (mode === "tavern") callAttach(page, false);
-    rebuildSnapshot();
-    emit();
-    return function () { return unregisterPage(page); };
   }
 
   function subscribe(listener) {
@@ -182,11 +117,7 @@ function createTavernPageSwitchStore(options) {
     if (disposed) return;
     disposed = true;
     listeners.clear();
-    if (activePage) {
-      callDetach(activePage);
-      activePage = null;
-    }
-    pages.length = 0;
+    available = false;
     if (win && typeof win.removeEventListener === "function") {
       try { win.removeEventListener("storage", handleStorage); } catch (error) { warn("[dsh-tavern-page-switch] cannot stop watching storage", error); }
     }
@@ -204,9 +135,10 @@ function createTavernPageSwitchStore(options) {
     nativeClass: nativeClass,
     getMode: function () { return mode; },
     setMode: setMode,
+    setAvailable: setAvailable,
+    isAvailable: function () { return available; },
     syncFromStorage: syncFromStorage,
     subscribe: subscribe,
-    registerPage: registerPage,
     getSnapshot: readSnapshot,
     dispose: dispose
   };
