@@ -4,16 +4,38 @@
 只有 Tavern 能释放它并显示宿主原生侧栏。因此接缝留在 Tavern，而切换 UI、持久化和页面注册表
 放在独立的插件里。
 
-## 补丁
+## 补丁对照
 
-- 文件：0001-tavern-left-page-seam.patch
-- 基线：Tavern main @ a8a41a96159932f844fa391db8d83ae16fc38034
-- 验证 clone：tavern-side/.verify/tavern（git archive main 解出的副本，被 git 忽略；
-  原始仓库 ~/_work/dsh-tavern 未修改）
+| 补丁 | 基线 | 状态 |
+| --- | --- | --- |
+| 0001-tavern-left-page-seam.patch | Tavern main @ a8a41a96（3.3.x） | 在 .verify/tavern 验证 |
+| 0002-tavern-left-page-seam-3.4.0.patch | Tavern 3.4.0（当前安装版） | 在 .verify/tavern-340 验证，并已应用到 /home/crux/.dsh-tavern/apps/dsh-tavern |
 
-在 Tavern 仓库根目录执行：
+两个补丁内容相同（5 个文件），区别只是基线：3.4.0 的 sidebar.js 已有两处上游修复，
+0001 的 lib/client.js hunk 不能直接用于 3.4.0，所以单独生成了 0002。
 
-        git apply /path/to/tavern-side/0001-tavern-left-page-seam.patch
+## 在已安装的 Tavern 上应用（3.4.0）
+
+    bash tavern-side/apply-seam.sh
+
+默认 TAVERN_DIR=/home/crux/.dsh-tavern/apps/dsh-tavern。脚本会检查版本（其他版本需要 FORCE=1）、
+已打补丁时直接退出，把 sidebar.js、main.js、tavern.css、lib/client.js 备份到
+tavern-side/backups/<时间>/，再 git apply 并执行 node bin/build-tavern-client.mjs。
+
+完成后必须重启 Tavern/DSH：DSH 的客户端模块在启动时注册，只刷新页面不够。
+Tavern 更新会覆盖安装目录，需要重新执行本脚本。
+
+回滚：
+
+    cd ~/.dsh-tavern/apps/dsh-tavern
+    git apply -R /home/crux/_work/dsh-tavern-page-switch/tavern-side/0002-tavern-left-page-seam-3.4.0.patch
+    node bin/build-tavern-client.mjs
+
+## 从 Tavern 源码应用
+
+在 Tavern 仓库根目录（3.4.0 用 0002，main 用 0001）执行：
+
+        git apply /path/to/tavern-side/0002-tavern-left-page-seam-3.4.0.patch
         node bin/build-tavern-client.mjs        # 或 pnpm build:client
         node --test tests/left-page-seam.test.mjs
         node bin/build-tavern-client.mjs --check
@@ -54,13 +76,22 @@
 
 ## 已执行的验证
 
-在 tavern-side/.verify/tavern（main @ a8a41a96）：
+在 .verify/tavern（main @ a8a41a96）：
 
 - node bin/build-tavern-client.mjs → 生成 tavern-plugin/lib/client.js
 - node --check tavern-plugin/lib/client.js → 通过
 - node --test tests/left-page-seam.test.mjs → 12 pass / 0 fail，其中包含
   node bin/build-tavern-client.mjs --check
 - 在干净 baseline 上 git apply --check / git apply → 成功，随后再次 --check 和测试均通过
+
+在 .verify/tavern-340（3.4.0 安装版源码，node_modules 软链到安装目录）：
+
+- 旧补丁的 client.js hunk 失败，其余 3 个文件打补丁成功（sidebar.js 偏移 12 行）
+- node bin/build-tavern-client.mjs → 重新生成 tavern-plugin/lib/client.js
+- node --test tests/left-page-seam.test.mjs → 12 pass / 0 fail
+- 生成 0002 后在干净 baseline 上 git apply --check / git apply，build --check 和 12 个测试再次通过
+- 在 /home/crux/.dsh-tavern/apps/dsh-tavern 上执行 apply-seam.sh：备份 4 个文件、
+  补丁应用成功、build --check 通过、源码与 lib/client.js 均含 createTavernLeftPageSeam
 
 未运行 Tavern 仓库的浏览器测试：本机 Playwright Chromium 未安装
 （~/.cache/ms-playwright/chromium-1208 缺失）。接缝测试是纯 Node，不需要浏览器。
@@ -69,4 +100,6 @@
 
 - 英文说明：README.md
 - 插件中文说明：../README.zh-CN.md
-- 补丁文件：0001-tavern-left-page-seam.patch
+- 补丁文件：0001-tavern-left-page-seam.patch（main/3.3.x）、
+  0002-tavern-left-page-seam-3.4.0.patch（3.4.0 安装版）
+- 应用到现有安装：apply-seam.sh

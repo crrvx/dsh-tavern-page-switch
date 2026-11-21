@@ -7,21 +7,45 @@ sidebar.workspaces slot: only Tavern can release it and reveal the host's native
 therefore stays in Tavern, while the switch UI, persistence, and page registry live in this
 independent plugin.
 
-## Patch
+## Patches
 
-- File: 0001-tavern-left-page-seam.patch
-- Base: Tavern main @ a8a41a96159932f844fa391db8d83ae16fc38034
-- Verification clone: tavern-side/.verify/tavern (a git archive main checkout, ignored by git; the
-  original checkout at ~/_work/dsh-tavern was not modified)
+| Patch | Base | Status |
+| --- | --- | --- |
+| 0001-tavern-left-page-seam.patch | Tavern main @ a8a41a96 (3.3.x) | verified in .verify/tavern |
+| 0002-tavern-left-page-seam-3.4.0.patch | Tavern 3.4.0 (current install) | verified in .verify/tavern-340 and applied to /home/crux/.dsh-tavern/apps/dsh-tavern |
 
-Apply from the Tavern repository root:
+Both patches change the same five files; only the base differs. Tavern 3.4.0 already contains two
+upstream sidebar.js fixes, so 0001's lib/client.js hunk cannot be used there and 0002 was generated
+from the 3.4.0 source.
 
-        git apply /path/to/tavern-side/0001-tavern-left-page-seam.patch
+## Apply to an installed Tavern (3.4.0)
+
+    bash tavern-side/apply-seam.sh
+
+TAVERN_DIR defaults to /home/crux/.dsh-tavern/apps/dsh-tavern. The script checks the version (set
+FORCE=1 for other versions), exits when the seam is already present, backs up sidebar.js, main.js,
+tavern.css, and lib/client.js under tavern-side/backups/<timestamp>/, then runs git apply and
+node bin/build-tavern-client.mjs.
+
+Restart Tavern/DSH afterwards: DSH registers client modules at startup, so a page refresh is not
+enough. A Tavern update replaces the install directory, so re-run the script after updating.
+
+Rollback:
+
+    cd ~/.dsh-tavern/apps/dsh-tavern
+    git apply -R /home/crux/_work/dsh-tavern-page-switch/tavern-side/0002-tavern-left-page-seam-3.4.0.patch
+    node bin/build-tavern-client.mjs
+
+## Apply from the Tavern source checkout
+
+From the Tavern repository root (use 0002 for 3.4.0, 0001 for main):
+
+        git apply /path/to/tavern-side/0002-tavern-left-page-seam-3.4.0.patch
         node bin/build-tavern-client.mjs        # or: pnpm build:client
         node --test tests/left-page-seam.test.mjs
         node bin/build-tavern-client.mjs --check
 
-The patch already contains the rebuilt tavern-plugin/lib/client.js, so --check passes right after
+Each patch already contains the rebuilt tavern-plugin/lib/client.js, so --check passes right after
 git apply; rebuilding is only needed after further source edits.
 
 ## What changes
@@ -67,6 +91,15 @@ In tavern-side/.verify/tavern (main @ a8a41a96):
   bin/build-tavern-client.mjs --check as a test
 - git apply --check / git apply of the patch on a clean baseline commit -> OK, followed by another
   --check and test run
+
+In .verify/tavern-340 (3.4.0 install source, node_modules symlinked to the install):
+
+- 0001's lib/client.js hunk failed; its other three files applied (sidebar.js offset 12 lines)
+- node bin/build-tavern-client.mjs -> regenerated tavern-plugin/lib/client.js
+- node --test tests/left-page-seam.test.mjs -> 12 passing
+- 0002 on a clean baseline: git apply --check, git apply, build --check, and the 12 tests all passed
+- apply-seam.sh against /home/crux/.dsh-tavern/apps/dsh-tavern: backed up four files, applied the
+  patch, build --check passed, and both the source and lib/client.js contain createTavernLeftPageSeam
 
 Browser tests from the Tavern repository were not run: Playwright's Chromium binary is not installed
 in this environment (~/.cache/ms-playwright/chromium-1208 is missing). The seam test is pure Node

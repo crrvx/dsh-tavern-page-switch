@@ -8,14 +8,33 @@
 ## 依赖
 
 - 支持客户端插件（web 平台）并提供 slots 服务的 DSH。
-- 打过 **左栏接缝补丁** 的 Tavern：见 tavern-side/README.zh-CN.md 和
-  tavern-side/0001-tavern-left-page-seam.patch。
-  未打补丁时插件仍能加载，但不会有页面注册，按钮保持隐藏，Tavern 行为与 main 完全一致。
+- 打过 **左栏接缝补丁** 的 Tavern：Tavern 3.4.0 用 tavern-side/0002-tavern-left-page-seam-3.4.0.patch，
+  Tavern main @ a8a41a96 用 tavern-side/0001-tavern-left-page-seam.patch。详见 tavern-side/README.zh-CN.md。
+  未打补丁时插件仍能加载（设置里显示已启用），但不会有页面注册，按钮保持隐藏，Tavern 行为与原来一致。
+
+## 装了却没反应？
+
+Tavern 插件市场安装会加载宿主半和浏览器半，插件本身已经生效；但左栏页面仍由 Tavern
+自己注入 sidebar.workspaces。没有接缝补丁时 Tavern 不会注册页面，插件按设计隐藏按钮。
+
+给 Tavern 打补丁并重启：
+
+    bash tavern-side/apply-seam.sh
+
+脚本会先备份被改的文件，再重建 Tavern 客户端 bundle。重启后页脚出现切换按钮；
+手动步骤、回滚和版本对应见 tavern-side/README.zh-CN.md。
 
 上游 Tavern 的 feat/style-switch-of-left-column 分支里有一个内建版切换。本插件刻意不依赖该分支：
 接缝让切换逻辑留在 Tavern 之外，并且可以直接用在 Tavern main 上。
 
-## 安装（手动，profile bundle）
+## 安装
+
+### 方式 A：Tavern 插件市场（推荐）
+
+1. Tavern 设置 → 酒馆插件，粘贴 https://github.com/crrvx/dsh-tavern-page-switch 安装并启用。
+2. 给 Tavern 打接缝补丁（见上一节），然后重启 Tavern/DSH。
+
+### 方式 B：profile bundle（手动）
 
 1. 把插件目录放在稳定位置，例如 /home/crux/_work/dsh-tavern-page-switch。
 2. 在使用它的 DSH profile（Tavern 对应 ~/.dsh/profiles/tavern/package.json）里增加依赖和 bundle 条目：
@@ -103,7 +122,9 @@ lib/client.js 是生成文件，不要手改。
 - 插件：node --test tests/ → 17 pass / 0 fail；node build.mjs --check → 已是最新。
 - Tavern clone：node --test tests/left-page-seam.test.mjs → 12 pass / 0 fail；同一测试会执行
   node bin/build-tavern-client.mjs --check。
-- 补丁基线：Tavern main @ a8a41a96159932f844fa391db8d83ae16fc38034。
+- 补丁基线：Tavern main @ a8a41a96159932f844fa391db8d83ae16fc38034（0001）；
+  Tavern 3.4.0（0002，已在 /home/crux/.dsh-tavern/apps/dsh-tavern 应用并验证
+  git apply --check、node bin/build-tavern-client.mjs --check 与 12 个接缝测试）。
 - 未跑浏览器端到端测试：本机 Playwright Chromium 未安装（~/.cache/ms-playwright/chromium-1208 缺失），
   接缝测试是纯 Node。
 
@@ -111,4 +132,6 @@ lib/client.js 是生成文件，不要手改。
 
 - 英文说明：README.md
 - Tavern 接缝补丁说明：tavern-side/README.zh-CN.md
-- 补丁文件：tavern-side/0001-tavern-left-page-seam.patch
+- 补丁文件：tavern-side/0001-tavern-left-page-seam.patch（main/3.3.x）与
+  tavern-side/0002-tavern-left-page-seam-3.4.0.patch（3.4.0）
+- 安装到现有 Tavern：tavern-side/apply-seam.sh

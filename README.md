@@ -12,15 +12,38 @@ content - it owns the mode, the button, and the page registry, while Tavern keep
 ## Requirements
 
 - DSH with client plugins (web platform) and the slots service.
-- Tavern with the **left-page seam** applied: see tavern-side/README.md and
-  tavern-side/0001-tavern-left-page-seam.patch. Without that patch this plugin still loads, but no
-  page registers, so the switch button stays hidden and Tavern behaves exactly as before.
+- Tavern with the **left-page seam** applied: use
+  tavern-side/0002-tavern-left-page-seam-3.4.0.patch for Tavern 3.4.0, or
+  tavern-side/0001-tavern-left-page-seam.patch for Tavern main @ a8a41a96. See
+  tavern-side/README.md. Without the seam this plugin still loads, but no page registers, so the
+  switch button stays hidden and Tavern behaves exactly as before.
+
+## Installed but nothing happens?
+
+A Tavern marketplace install loads both the host half and the browser half, so the plugin itself is
+running. The left page is still injected into sidebar.workspaces by Tavern itself. Without the seam
+Tavern never registers a page, and the plugin hides the button by design.
+
+Apply the seam to Tavern and restart:
+
+    bash tavern-side/apply-seam.sh
+
+The script backs up every file it changes, then rebuilds Tavern's client bundle. After a restart the
+footer button appears. Manual steps, rollback and version mapping live in tavern-side/README.md.
 
 The upstream Tavern work-in-progress branch feat/style-switch-of-left-column contains an earlier
 in-tree version of the same switch. This plugin deliberately does not depend on that branch: the
 patched seam lets the switch live outside Tavern and works with Tavern's main.
 
-## Install (manual, profile bundle)
+## Install
+
+### Option A: Tavern marketplace (recommended)
+
+1. In Tavern open Settings -> Tavern plugins, paste
+   https://github.com/crrvx/dsh-tavern-page-switch, install and enable it.
+2. Apply the Tavern seam (previous section), then restart Tavern/DSH.
+
+### Option B: profile bundle (manual)
 
 1. Keep or copy this directory somewhere stable, for example
    /home/crux/_work/dsh-tavern-page-switch.
@@ -117,6 +140,8 @@ lib/client.js is generated; do not edit it by hand.
 - Plugin: node --test tests/ -> 17 passing; node build.mjs --check -> up to date.
 - Tavern clone: node --test tests/left-page-seam.test.mjs -> 12 passing; the same test runs
   node bin/build-tavern-client.mjs --check.
-- Tavern base for the patch: main @ a8a41a96159932f844fa391db8d83ae16fc38034.
+- Tavern bases: main @ a8a41a96159932f844fa391db8d83ae16fc38034 (patch 0001) and
+  Tavern 3.4.0 (patch 0002, applied and verified against
+  /home/crux/.dsh-tavern/apps/dsh-tavern: git apply --check, build --check, and the 12 seam tests).
 
-See tavern-side/README.md for the seam patch and its verification log.
+See tavern-side/README.md for the seam patches, apply-seam.sh, and the verification log.
