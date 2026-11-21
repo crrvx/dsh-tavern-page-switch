@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 var TAVERN_PAGE_SWITCH_STYLE_ID = "dsh-tavern-page-switch-styles";
 
 var TAVERN_PAGE_SWITCH_CSS = [

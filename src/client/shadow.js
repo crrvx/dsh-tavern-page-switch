@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 var TAVERN_PAGE_SWITCH_WORKSPACE_SLOT = "sidebar.workspaces";
 var TAVERN_PAGE_SWITCH_BRAND_SLOT = "sidebar.brand.mark";
 var TAVERN_PAGE_SWITCH_WORKSPACE_ID = "dsh-tavern-page-switch:native-workspaces";

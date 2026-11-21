@@ -20,7 +20,7 @@ test("native mode CSS overrides every chrome rule stock Tavern hides", async () 
   assert.match(source, /display: inline-flex !important/);
   assert.match(source, /display: flex !important/);
   assert.match(source, /display: inline !important/);
-  assert.ok(!source.includes(".dsh-tavern-side-style-switch"), "must not collide with the in-tree branch class");
+  assert.ok(!source.includes(".dsh-tavern-side-style-switch"), "must not collide with Tavern's own class names");
 });
 
 test("the stylesheet installs once and removes itself", async () => {

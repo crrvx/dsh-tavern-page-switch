@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 var TAVERN_PAGE_SWITCH_STORAGE_KEY = "dsh-tavern-sidebar-style";
 var TAVERN_PAGE_SWITCH_NATIVE_CLASS = "dsh-tavern-native-sidebar";
 

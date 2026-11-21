@@ -1,10 +1,14 @@
 {
   "name": "dsh-tavern-page-switch",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "Left sidebar page switch for DeepSeek Harness: Tavern page vs native host sidebar.",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crrvx/dsh-tavern-page-switch.git"
+  },
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
@@ -14,7 +18,8 @@
     "lib",
     "cordis.patch.yml",
     "README.md",
-    "README.zh-CN.md"
+    "README.zh-CN.md",
+    "LICENSE"
   ],
   "dsh": {
     "manifestVersion": 1,
