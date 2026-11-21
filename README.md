@@ -31,6 +31,11 @@ Apply the seam to Tavern and restart:
 The script backs up every file it changes, then rebuilds Tavern's client bundle. After a restart the
 footer button appears. Manual steps, rollback and version mapping live in tavern-side/README.md.
 
+Note: ~/.dsh-tavern (the CLI Tavern) and ~/.dsh (the Tavern profile of DSH Desktop) are separate DSH
+homes with separate plugin folders and cordis.patch.yml files. A plugin installed in one home does
+not appear in the other; install it in each Tavern you want it in. The 0002 patch applies to the
+Tavern source at ~/.dsh-tavern/apps/dsh-tavern, which both profiles link to.
+
 The upstream Tavern work-in-progress branch feat/style-switch-of-left-column contains an earlier
 in-tree version of the same switch. This plugin deliberately does not depend on that branch: the
 patched seam lets the switch live outside Tavern and works with Tavern's main.

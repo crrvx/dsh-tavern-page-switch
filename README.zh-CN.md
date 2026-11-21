@@ -24,6 +24,11 @@ Tavern 插件市场安装会加载宿主半和浏览器半，插件本身已经�
 脚本会先备份被改的文件，再重建 Tavern 客户端 bundle。重启后页脚出现切换按钮；
 手动步骤、回滚和版本对应见 tavern-side/README.zh-CN.md。
 
+注意：~/.dsh-tavern（CLI Tavern）和 ~/.dsh（DSH Desktop 的 tavern profile）是两套 DSH home，
+插件目录和 cordis.patch.yml 各自独立。插件装在哪个 home，就只会在哪个 Tavern 里出现；
+两边都要用时，请在两边分别安装。0002 补丁作用于 ~/.dsh-tavern/apps/dsh-tavern，
+两个 profile 的 node_modules 都链接到这份 Tavern 源码。
+
 上游 Tavern 的 feat/style-switch-of-left-column 分支里有一个内建版切换。本插件刻意不依赖该分支：
 接缝让切换逻辑留在 Tavern 之外，并且可以直接用在 Tavern main 上。
 
