@@ -1,5 +1,7 @@
 # dsh-tavern-page-switch
 
+中文文档：[README.zh-CN.md](README.zh-CN.md)
+
 A standalone DeepSeek Harness client plugin that switches the **left sidebar** between the
 [DSH Tavern](https://github.com/flizzywine/dsh-tavern) page and the host's native sidebar.
 

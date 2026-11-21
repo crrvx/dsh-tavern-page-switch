@@ -1,5 +1,7 @@
 # Tavern left-page seam (patch for Tavern)
 
+中文文档：[README.zh-CN.md](README.zh-CN.md)
+
 This directory ships the Tavern-side half of dsh-tavern-page-switch. Tavern owns the
 sidebar.workspaces slot: only Tavern can release it and reveal the host's native sidebar. The seam
 therefore stays in Tavern, while the switch UI, persistence, and page registry live in this
