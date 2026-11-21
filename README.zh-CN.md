@@ -6,7 +6,19 @@
 
 ## 1. 为什么、行为与限制
 
-Tavern 占用了左栏。本插件在左栏底部加一个按钮，需要时把左栏换成宿主原生 `WorkspaceBrowser`，再切回 Tavern。它在 `sidebar.workspaces` 注册一条更低优先级的代理，把渲染委托给宿主组件，因而不改 Tavern 的文件和注册。选择保存在 `localStorage`。
+### 为什么
+
+Tavern 占用了 DSH 的原生左栏。很多人会在 Tavern 上再加装其他 DSH 插件，而很多 DSH 原生页面、原生插件和第三方插件，快捷入口——有时甚至是唯一入口——只在原生左栏。切不回原生左栏，这些入口就找不到。
+
+![原生左栏](./dist/dsh原生左栏.png)
+
+### 行为
+
+本插件在左栏底部加一个按钮，需要时把左栏换成宿主原生 `WorkspaceBrowser`，再切回 Tavern。它在 `sidebar.workspaces` 注册一条更低优先级的代理，把渲染委托给宿主组件，因而不改 Tavern 的文件和注册。选择保存在 `localStorage`。
+
+![切换按钮](./dist/切换按钮.png)
+
+![见视频demo (109KB，可自行下载)](./dist/左栏样式切换.webm)
 
 - **酒馆模式**（默认）：Tavern 左栏、品牌和外壳保持原样，与未安装插件一致。
 - **原生模式**：显示宿主 WorkspaceBrowser；有宿主品牌时替换 Tavern 品牌；插件 CSS 覆盖 Tavern 隐藏宿主控件的规则。
@@ -14,7 +26,9 @@ Tavern 占用了左栏。本插件在左栏底部加一个按钮，需要时把�
 - **安全降级**：任一页面或槽位结构缺失时按钮隐藏，Tavern 不受影响。
 - **持久化**：键 `dsh-tavern-sidebar-style`，值 `tavern` / `native`；storage 事件同步多标签。
 
-限制：只切换左栏，对话与右侧面板继续运行。识别依赖宿主声明 `sidebar.workspaces.directoryFlow`、Tavern 声明 `tavern.sidebar.chrome`。只有官方 DSH 构建才替换宿主品牌。从原生切回不会强制展开左栏。
+### 限制
+
+只切换左栏，对话与右侧面板继续运行。识别依赖宿主声明 `sidebar.workspaces.directoryFlow`、Tavern 声明 `tavern.sidebar.chrome`。只有官方 DSH 构建才替换宿主品牌。从原生切回不会强制展开左栏。
 
 ## 2. 安装
 

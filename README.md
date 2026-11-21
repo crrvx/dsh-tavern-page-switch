@@ -6,7 +6,19 @@ Switch the Tavern left sidebar to the host's native sidebar and back. Pure clien
 
 ## 1. Why, behaviour and limits
 
-Tavern owns the left column. This plugin adds a footer button that swaps it for the host's native `WorkspaceBrowser` when needed, then restores Tavern. It registers a lower-priority delegate for `sidebar.workspaces` and asks the host component to render, so Tavern's files and registrations stay untouched. The choice is stored in `localStorage`.
+### Why
+
+Tavern takes over DSH's native left sidebar. People often add more DSH plugins on top of Tavern, and many DSH pages, native plugins and third-party plugins put their shortcut — sometimes their only entry — in that native sidebar. If you cannot get back to it, those entries are missing.
+
+![原生左栏](./dist/dsh原生左栏.png)
+
+### Behaviour
+
+This plugin adds a footer button that swaps Tavern's left column for the host's native `WorkspaceBrowser` when needed, then restores Tavern. It registers a lower-priority delegate for `sidebar.workspaces` and asks the host component to render, so Tavern's files and registrations stay untouched. The choice is stored in `localStorage`.
+
+![切换按钮](./dist/切换按钮.png)
+
+![见视频demo (109KB，可自行下载)](./dist/左栏样式切换.webm)
 
 - **Tavern mode** (default): Tavern page, brand and chrome; identical to not installing the plugin.
 - **Native mode**: host WorkspaceBrowser renders; the host brand replaces Tavern's when available; injected CSS overrides Tavern's host-chrome hiding.
@@ -14,7 +26,9 @@ Tavern owns the left column. This plugin adds a footer button that swaps it for 
 - **Safe fallback**: if a page or the expected slot shape is missing, the button hides and Tavern is untouched.
 - **Persistence**: key `dsh-tavern-sidebar-style`, values `tavern` / `native`; storage events sync tabs.
 
-Limits: only the left column changes; conversation and right panels keep running. Detection expects the host to declare `sidebar.workspaces.directoryFlow` and Tavern to declare `tavern.sidebar.chrome`. The host brand is replaced only on official DSH builds. Returning from native does not force-expand the column.
+### Limits
+
+Only the left column changes; conversation and right panels keep running. Detection expects the host to declare `sidebar.workspaces.directoryFlow` and Tavern to declare `tavern.sidebar.chrome`. The host brand is replaced only on official DSH builds. Returning from native does not force-expand the column.
 
 ## 2. Install
 
