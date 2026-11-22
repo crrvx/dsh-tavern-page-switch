@@ -39,3 +39,49 @@ test("the stylesheet installs once and removes itself", async () => {
   remove();
   assert.equal(doc.head.children.length, 0);
 });
+
+test("login row CSS makes the switch compact and hides the footer fallback", async () => {
+  const source = await readSource("styles.js");
+  const context = (await import("node:vm")).createContext({});
+  (await import("node:vm")).runInContext(source, context);
+  const css = context.TAVERN_PAGE_SWITCH_STYLES;
+  assert.ok(css.includes('[data-slot="sidebar.footer.action"] .dsh-tavern-page-switch-footer'));
+  assert.match(
+    css,
+    /body\.dsh-tavern-page-switch-login-row-active \[data-slot="sidebar\.footer\.action"\] \.dsh-tavern-page-switch-footer \{\n  display: none !important;/
+  );
+  assert.match(
+    css,
+    /body\.dsh-tavern-page-switch-login-row-active \[data-slot="settings\.launcher"\] \{\n  flex: 1 1 auto;\n  min-width: 0;/
+  );
+  assert.match(css, /\.dsh-tavern-page-switch-login-button \{\n  margin-inline-start: auto;\n  flex: 0 0 auto;/);
+  assert.match(css, /width: auto !important/);
+  assert.match(css, /min-width: 28px !important/);
+  assert.match(css, /justify-self: end !important/);
+  assert.match(css, /margin-inline-start: auto !important/);
+});
+
+test("collapsed rail CSS keeps the bottom switch compact and hides the footer fallback", async () => {
+  const source = await readSource("styles.js");
+  const context = (await import("node:vm")).createContext({});
+  (await import("node:vm")).runInContext(source, context);
+  const css = context.TAVERN_PAGE_SWITCH_STYLES;
+  assert.match(
+    css,
+    /body\.dsh-tavern-page-switch-rail-footer-active \[data-slot="sidebar\.footer\.action"\] \.dsh-tavern-page-switch-footer \{\n  display: none !important;/
+  );
+  assert.match(
+    css,
+    /\.dsh-tavern-page-switch-rail-button \{\n  width: 28px;\n  height: 28px;\n  min-width: 28px;\n  min-height: 28px;\n  padding: 0;\n  margin: 8px auto 2px;\n  align-self: center;/
+  );
+});
+
+test("footer structural overrides are gone and no other footer child is restyled", async () => {
+  const source = await readSource("styles.js");
+  assert.ok(!source.includes("_footArea"), "must not restructure the host footer area");
+  assert.ok(!source.includes("_footerActions"), "must not restructure the host footer actions");
+  assert.ok(!source.includes("grid-column"), "must not override the desktop grid placement");
+  assert.ok(!source.includes(":has("), "must not depend on relational selectors");
+  assert.ok(!source.includes('only-child'), "must not require the switch to be the sole footer child");
+  assert.ok(!source.includes('[data-slot="sidebar.footer.action"] > *'), "must not restyle every footer child");
+});

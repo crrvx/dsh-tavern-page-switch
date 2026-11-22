@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const CLIENT_SOURCE_FILES = ["styles.js", "core.js", "shadow.js", "switch-button.js", "main.js"];
+export const CLIENT_SOURCE_FILES = ["styles.js", "core.js", "shadow.js", "switch-button.js", "login-row.js", "rail-button.js", "main.js"];
 export const PLUGIN_ID = "dsh-tavern-page-switch";
 
 const HEADER = [

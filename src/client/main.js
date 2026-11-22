@@ -25,6 +25,8 @@ function applyTavernPageSwitch(ctx) {
   var slots = ctx.slots;
   var shadow = createTavernNativeShadow({ slots: slots, service: service });
   var SwitchButton = createTavernPageSwitchButton(service);
+  var loginRow = null;
+  var railFooter = null;
 
   function mountSwitch() {
     return slots.inject("sidebar.footer.action", function () {
@@ -36,6 +38,34 @@ function applyTavernPageSwitch(ctx) {
     });
   }
 
+  function mountLoginRow() {
+    if (typeof document === "undefined" || !document || !document.body) return null;
+    try {
+      return createTavernPageSwitchLoginRow({
+        document: document,
+        window: typeof window === "undefined" ? undefined : window,
+        service: service
+      });
+    } catch (error) {
+      console.warn("[dsh-tavern-page-switch] cannot mount the login-row switch", error);
+      return null;
+    }
+  }
+
+  function mountRailFooter() {
+    if (typeof document === "undefined" || !document || !document.body) return null;
+    try {
+      return createTavernPageSwitchRailFooter({
+        document: document,
+        window: typeof window === "undefined" ? undefined : window,
+        service: service
+      });
+    } catch (error) {
+      console.warn("[dsh-tavern-page-switch] cannot mount the rail-footer switch", error);
+      return null;
+    }
+  }
+
   function releaseSwitch(release) {
     if (typeof release === "function") release();
     else if (release && typeof release.dispose === "function") release.dispose();
@@ -45,7 +75,13 @@ function applyTavernPageSwitch(ctx) {
     ctx.effect(function () {
       shadow.start();
       var release = mountSwitch();
+      loginRow = mountLoginRow();
+      railFooter = mountRailFooter();
       return function () {
+        if (loginRow && typeof loginRow.dispose === "function") loginRow.dispose();
+        loginRow = null;
+        if (railFooter && typeof railFooter.dispose === "function") railFooter.dispose();
+        railFooter = null;
         releaseSwitch(release);
         shadow.dispose();
         removeStyles();
@@ -58,6 +94,8 @@ function applyTavernPageSwitch(ctx) {
   } else {
     shadow.start();
     mountSwitch();
+    loginRow = mountLoginRow();
+    railFooter = mountRailFooter();
   }
 }
 

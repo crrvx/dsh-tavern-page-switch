@@ -1,20 +1,84 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 var TAVERN_PAGE_SWITCH_STYLE_ID = "dsh-tavern-page-switch-styles";
-
-var TAVERN_PAGE_SWITCH_CSS = [
-  '[class*="_footArea"]:has(> [class*="_footerActions"] .dsh-tavern-page-switch-button) { display: flex; flex-direction: row; align-items: center; gap: 6px; }',
-  '[class*="_footArea"]:has(> [class*="_footerActions"] .dsh-tavern-page-switch-button) > [class*="_settingsArea"] { order: 1; flex: 1 1 auto; width: auto; min-width: 0; }',
-  '[class*="_footArea"]:has(> [class*="_footerActions"] .dsh-tavern-page-switch-button) > [class*="_footerActions"] { order: 2; flex: 0 0 auto; width: auto; min-width: 0; }',
-  '[class*="_root"][class*="_collapsed"] [class*="_footArea"]:has(> [class*="_footerActions"] .dsh-tavern-page-switch-button) { flex-direction: column; gap: 4px; }',
-  '[class*="_root"][class*="_collapsed"] [class*="_footArea"]:has(> [class*="_footerActions"] .dsh-tavern-page-switch-button) > :is([class*="_settingsArea"], [class*="_footerActions"]) { flex: none; width: auto; }',
-  '.dsh-tavern-page-switch-button { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box; height: 28px; min-width: 28px; padding: 0 8px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 1; white-space: nowrap; cursor: pointer; }',
-  '.dsh-tavern-page-switch-button:hover { border-color: var(--dsh-tavern-accent, var(--dsw-alias-label-primary)); background: color-mix(in srgb, var(--dsh-tavern-accent, var(--dsw-alias-label-primary)) 8%, transparent); color: var(--dsw-alias-label-primary); }',
-  '.dsh-tavern-page-switch-button:focus-visible { outline: 2px solid var(--dsh-tavern-accent, var(--dsw-alias-label-primary)); outline-offset: 1px; }',
-  '.dsh-tavern-page-switch-button-label { flex: none; }',
-  '.dsh-tavern-page-switch-button-value { flex: none; color: var(--dsw-alias-label-primary); font-weight: 700; }',
-  '.dsh-tavern-page-switch-button-value:only-child { font-size: 15px; font-weight: 600; }',
-  '',
-  '/* Native mode keeps Tavern\'s shell but must show the host chrome that stock Tavern hides. */',
+var TAVERN_PAGE_SWITCH_STYLES = [
+  ".dsh-tavern-page-switch-button {",
+  "  -webkit-appearance: none;",
+  "  appearance: none;",
+  "  display: inline-flex;",
+  "  align-items: center;",
+  "  justify-content: center;",
+  "  gap: 6px;",
+  "  box-sizing: border-box;",
+  "  flex: 0 0 auto;",
+  "  min-width: 28px;",
+  "  min-height: 28px;",
+  "  padding: 4px 8px;",
+  "  border: 1px solid var(--dsh-border-weak, rgba(255, 255, 255, 0.18));",
+  "  border-radius: 8px;",
+  "  background: var(--dsh-bg-elevated, rgba(255, 255, 255, 0.06));",
+  "  color: var(--dsh-text-primary, currentColor);",
+  "  font: inherit;",
+  "  line-height: 1.2;",
+  "  white-space: nowrap;",
+  "  cursor: pointer;",
+  "}",
+  ".dsh-tavern-page-switch-button:hover {",
+  "  background: var(--dsh-bg-elevated-hover, rgba(255, 255, 255, 0.1));",
+  "}",
+  ".dsh-tavern-page-switch-button:focus-visible {",
+  "  outline: 2px solid var(--dsh-accent, #8ab4f8);",
+  "  outline-offset: 2px;",
+  "}",
+  ".dsh-tavern-page-switch-button .dsh-tavern-page-switch-button-label {",
+  "  font-size: 12px;",
+  "  font-weight: 600;",
+  "  opacity: 0.9;",
+  "}",
+  ".dsh-tavern-page-switch-button .dsh-tavern-page-switch-button-value {",
+  "  font-size: 12px;",
+  "  font-weight: 600;",
+  "  color: var(--dsh-accent, #8ab4f8);",
+  "}",
+  "",
+  "/* Footer fallback: compact and right-aligned without touching its slot. */",
+  '[data-slot="sidebar.footer.action"] .dsh-tavern-page-switch-footer {',
+  "  flex: 0 0 auto !important;",
+  "  width: auto !important;",
+  "  min-width: 28px !important;",
+  "  max-width: 100% !important;",
+  "  margin-inline-start: auto !important;",
+  "  align-self: flex-end;",
+  "  justify-self: end !important;",
+  "}",
+  "",
+  "/* With the wide trigger-row switch active, the footer fallback is redundant. */",
+  'body.dsh-tavern-page-switch-login-row-active [data-slot="sidebar.footer.action"] .dsh-tavern-page-switch-footer {',
+  "  display: none !important;",
+  "}",
+  "body.dsh-tavern-page-switch-login-row-active [data-slot=\"settings.launcher\"] {",
+  "  flex: 1 1 auto;",
+  "  min-width: 0;",
+  "}",
+  ".dsh-tavern-page-switch-login-button {",
+  "  margin-inline-start: auto;",
+  "  flex: 0 0 auto;",
+  "}",
+  "",
+  "/* Collapsed rail: keep the switch after the account at the very bottom. */",
+  'body.dsh-tavern-page-switch-rail-footer-active [data-slot="sidebar.footer.action"] .dsh-tavern-page-switch-footer {',
+  "  display: none !important;",
+  "}",
+  ".dsh-tavern-page-switch-rail-button {",
+  "  width: 28px;",
+  "  height: 28px;",
+  "  min-width: 28px;",
+  "  min-height: 28px;",
+  "  padding: 0;",
+  "  margin: 8px auto 2px;",
+  "  align-self: center;",
+  "}",
+  "",
+  "/* Native mode keeps Tavern's shell but must show the host chrome that stock Tavern hides. */",
   'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar button[aria-label="新建会话"],',
   'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar button[aria-label="New session"] { display: inline-flex !important; }',
   'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar nav[aria-label="全局面板"],',
@@ -22,18 +86,18 @@ var TAVERN_PAGE_SWITCH_CSS = [
   'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [data-slot="settings.launcher"] button[data-signed-out] > [class$="_label"] { display: inline !important; }',
   'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [data-slot="settings.launcher"] button[data-signed-out][data-collapsed="false"]::after { content: none !important; }',
   'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [class*="_logoRow"] > [class*="_brand"] { display: flex !important; }',
-  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [class*="_topStrip"] + [class*="_logoRow"] { display: flex !important; }',
+  'body.dsh-tavern-shell-active.dsh-tavern-native-sidebar [class*="_topStrip"] + [class*="_logoRow"] { display: flex !important; }'
 ].join("\n");
 
-function installTavernPageSwitchStyles(doc) {
-  if (!doc || !doc.head) return function () {};
-  var existing = typeof doc.getElementById === "function" ? doc.getElementById(TAVERN_PAGE_SWITCH_STYLE_ID) : null;
+function installTavernPageSwitchStyles(document) {
+  if (!document || !document.head) return function () {};
+  var existing = document.getElementById(TAVERN_PAGE_SWITCH_STYLE_ID);
   if (existing) return function () {};
-  var element = doc.createElement("style");
-  element.id = TAVERN_PAGE_SWITCH_STYLE_ID;
-  element.textContent = TAVERN_PAGE_SWITCH_CSS;
-  doc.head.appendChild(element);
+  var style = document.createElement("style");
+  style.id = TAVERN_PAGE_SWITCH_STYLE_ID;
+  style.textContent = TAVERN_PAGE_SWITCH_STYLES;
+  document.head.appendChild(style);
   return function () {
-    if (element.parentNode) element.parentNode.removeChild(element);
+    if (style.parentNode) style.parentNode.removeChild(style);
   };
 }
